@@ -48,6 +48,7 @@ import { getKiloCodeWrapperProperties } from "./core/kilocode/wrapper" // kiloco
 import { flushModels, getModels } from "./api/providers/fetchers/modelCache"
 import { ManagedIndexer } from "./services/code-index/managed/ManagedIndexer" // kilocode_change
 import { updateCodeIndexWithKiloProps } from "./services/code-index/managed/webview" // kilocode_change
+import { getCommand } from "./utils/commands"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -161,14 +162,34 @@ export async function activate(context: vscode.ExtensionContext) {
 	// kilocode_change start: Initialize ManagedIndexer
 	const managedIndexer = new ManagedIndexer(contextProxy)
 	context.subscriptions.push(managedIndexer)
-	managedIndexer.start().catch((error) => {
-		outputChannel.appendLine(
-			`Failed to start ManagedIndexer: ${error instanceof Error ? error.message : String(error)}`,
-		)
-	})
+	// context.subscriptions.push(
+	// 	vscode.commands.registerCommand(getCommand("showManagedIndexerState" as any), async () => {
+	// 		try {
+	// 			if (managedIndexer && typeof managedIndexer.getWorkspaceFolderStateSnapshot === "function") {
+	// 				const state = managedIndexer.getWorkspaceFolderStateSnapshot()
+	// 				const stateJson = JSON.stringify(state, null, 2)
+
+	// 				// Create a new untitled document to show the state
+	// 				const doc = await vscode.workspace.openTextDocument({
+	// 					content: stateJson,
+	// 					language: "json",
+	// 				})
+	// 				await vscode.window.showTextDocument(doc)
+
+	// 				vscode.window.showInformationMessage(`ManagedIndexer state: ${state.length} workspace folder(s)`)
+	// 			} else {
+	// 				vscode.window.showWarningMessage("ManagedIndexer is not available or not initialized")
+	// 			}
+	// 		} catch (error) {
+	// 			const errorMessage = error instanceof Error ? error.message : String(error)
+	// 			outputChannel.appendLine(`Error getting ManagedIndexer state: ${errorMessage}`)
+	// 			vscode.window.showErrorMessage(`Failed to get ManagedIndexer state: ${errorMessage}`)
+	// 		}
+	// 	}),
+	// )
 	// kilocode_change end
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, mdmService)
-	const initManagedCodeIndexing = updateCodeIndexWithKiloProps(provider) // kilocode_change
+	// const initManagedCodeIndexing = updateCodeIndexWithKiloProps(provider) // kilocode_change
 
 	// Initialize Roo Code Cloud service.
 	const postStateListener = () => ClineProvider.getVisibleInstance()?.postStateToWebview()
@@ -442,7 +463,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	await checkAndRunAutoLaunchingTask(context) // kilocode_change
-	await initManagedCodeIndexing // kilocode_change
+	// await initManagedCodeIndexing // kilocode_change
+	await managedIndexer.start().catch((error) => {
+		outputChannel.appendLine(
+			`Failed to start ManagedIndexer: ${error instanceof Error ? error.message : String(error)}`,
+		)
+	})
 
 	return new API(outputChannel, provider, socketPath, enableLogging)
 }

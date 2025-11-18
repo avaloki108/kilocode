@@ -15,6 +15,7 @@ import { getServerManifest, upsertFile } from "./api-client"
 import { logger } from "../../../utils/logging"
 import { MANAGED_MAX_CONCURRENT_FILES } from "../constants"
 import { ServerManifest } from "./types"
+import { scannerExtensions } from "../shared/supported-extensions"
 
 interface ManagedIndexerConfig {
 	kilocodeToken: string | null
@@ -218,18 +219,13 @@ export class ManagedIndexer implements vscode.Disposable {
 						return state
 					}
 
-					// Step 4: Create and start git watcher
+					// Step 4: Create git watcher
 					try {
 						const watcher = new GitWatcher({ cwd })
 						state.watcher = watcher
 
 						// Register event handler
 						watcher.onEvent(this.onEvent.bind(this))
-
-						// Perform an initial scan
-						await watcher.scan()
-						// Then start the watcher
-						await watcher.start()
 					} catch (error) {
 						const errorMessage = error instanceof Error ? error.message : String(error)
 						logger.error(`[ManagedIndexer] Failed to start watcher for ${cwd}: ${errorMessage}`)
@@ -265,6 +261,16 @@ export class ManagedIndexer implements vscode.Disposable {
 		)
 
 		this.workspaceFolderState = states.filter((s) => s !== null)
+
+		// Kick off scans and start watchers
+		await Promise.all(
+			this.workspaceFolderState.map(async (state) => {
+				// Perform an initial scan
+				await state.watcher?.scan()
+				// Then start the watcher
+				await state.watcher?.start()
+			}),
+		)
 	}
 
 	dispose() {
@@ -283,6 +289,8 @@ export class ManagedIndexer implements vscode.Disposable {
 	}
 
 	async onEvent(event: GitWatcherEvent): Promise<void> {
+		console.log("[ManagedIndexer] Event", event)
+
 		if (!this.isActive) {
 			return
 		}
@@ -324,13 +332,20 @@ export class ManagedIndexer implements vscode.Disposable {
 				const { branch, filePath, fileHash, isBaseBranch, watcher } = event
 				const { projectId, manifest } = state
 
+				// Check if file extension is supported
+				const ext = path.extname(filePath).toLowerCase()
+				if (!scannerExtensions.includes(ext)) {
+					logger.info(`[ManagedIndexer] Skipping file with unsupported extension: ${filePath}`)
+					return
+				}
+
 				// Already indexed
 				if (manifest.files.some((f) => f.filePath === filePath && f.fileHash === fileHash)) {
 					return
 				}
 
 				// Concurrently process the file
-				return this.fileUpsertLimit(async () => {
+				return await this.fileUpsertLimit(async () => {
 					try {
 						// Ensure we have the necessary configuration
 						if (!this.config?.kilocodeToken || !this.config?.kilocodeOrganizationId) {
@@ -384,11 +399,38 @@ export class ManagedIndexer implements vscode.Disposable {
 				})
 			}
 		}
+
+		console.log("[ManagedIndexer] end state", state)
 	}
 
 	async onDidChangeWorkspaceFolders(e: vscode.WorkspaceFoldersChangeEvent) {
 		// TODO we could more intelligently handle this instead of going scorched earth
 		this.dispose()
 		await this.start()
+	}
+
+	/**
+	 * Get a serializable representation of the current workspace folder state
+	 * for debugging and introspection purposes
+	 */
+	getWorkspaceFolderStateSnapshot() {
+		return this.workspaceFolderState.map((state) => ({
+			workspaceFolderPath: state.workspaceFolder.uri.fsPath,
+			workspaceFolderName: state.workspaceFolder.name,
+			gitBranch: state.gitBranch,
+			projectId: state.projectId,
+			isIndexing: state.isIndexing,
+			hasManifest: !!state.manifest,
+			manifestFileCount: state.manifest?.files.length ?? 0,
+			hasWatcher: !!state.watcher,
+			error: state.error
+				? {
+						type: state.error.type,
+						message: state.error.message,
+						timestamp: state.error.timestamp,
+						context: state.error.context,
+					}
+				: undefined,
+		}))
 	}
 }

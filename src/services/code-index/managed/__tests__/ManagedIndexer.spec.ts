@@ -735,6 +735,28 @@ describe("ManagedIndexer", () => {
 					expect.stringContaining("[ManagedIndexer] Failed to upsert file test.ts: API error"),
 				)
 			})
+
+			it("should skip files with unsupported extensions", async () => {
+				state.manifest = { files: [] }
+
+				const event: GitWatcherEvent = {
+					type: "file-changed",
+					filePath: "test.unsupported",
+					fileHash: "abc123",
+					branch: "main",
+					isBaseBranch: true,
+					watcher: mockWatcher,
+				}
+
+				await indexer.onEvent(event)
+
+				await new Promise((resolve) => setTimeout(resolve, 10))
+
+				expect(logger.info).toHaveBeenCalledWith(
+					"[ManagedIndexer] Skipping file with unsupported extension: test.unsupported",
+				)
+				expect(apiClient.upsertFile).not.toHaveBeenCalled()
+			})
 		})
 	})
 

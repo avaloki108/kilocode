@@ -6,7 +6,6 @@
  * backend API for managed indexing operations (upsert, search, delete, manifest).
  */
 
-import FormData from "form-data"
 import { ManagedCodeChunk, SearchRequest, SearchResult, ServerManifest } from "./types"
 import { logger } from "../../../utils/logging"
 import { getKiloBaseUriFromToken } from "../../../../packages/types/src/kilocode/kilocode"
@@ -214,10 +213,7 @@ export async function upsertFile(params: UpsertFileParams): Promise<void> {
 
 		// Append the file with metadata
 		const filename = filePath.split("/").pop() || "file"
-		formData.append("file", fileBuffer, {
-			filename,
-			contentType: "application/octet-stream",
-		})
+		formData.append("file", new Blob([fileBuffer as any]), filename)
 		formData.append("organizationId", organizationId)
 		formData.append("projectId", projectId)
 		formData.append("filePath", filePath)
@@ -227,12 +223,11 @@ export async function upsertFile(params: UpsertFileParams): Promise<void> {
 
 		const response = await fetchWithRetries({
 			url: `${baseUrl}/api/code-indexing/upsert-by-file`,
-			method: "POST",
+			method: "PUT",
 			headers: {
 				Authorization: `Bearer ${kilocodeToken}`,
-				...formData.getHeaders(),
 			},
-			body: formData as any,
+			body: formData,
 		})
 
 		if (!response.ok) {
