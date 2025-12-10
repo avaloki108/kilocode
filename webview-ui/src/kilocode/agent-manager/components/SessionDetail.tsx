@@ -13,7 +13,7 @@ import { MessageList } from "./MessageList"
 import { ChatInput } from "./ChatInput"
 import { vscode } from "../utils/vscode"
 import { formatRelativeTime, createRelativeTimeLabels } from "../utils/timeUtils"
-import { Loader2, SendHorizontal, RefreshCw, GitBranch, Folder, ChevronDown, AlertCircle, Zap, X } from "lucide-react"
+import { Loader2, SendHorizontal, RefreshCw, GitBranch, Folder, ChevronDown, AlertCircle, Zap, X, Github } from "lucide-react"
 import DynamicTextArea from "react-textarea-autosize"
 import { cn } from "../../../lib/utils"
 import { StandardTooltip } from "../../../components/ui"
@@ -49,6 +49,11 @@ export function SessionDetail() {
 	const isWorktree = selectedSession.parallelMode?.enabled
 	const branchName = selectedSession.parallelMode?.branch
 
+	const prLink = useMemo(() => {
+		if (!selectedSession.gitUrl || !branchName) return null
+		return getPullRequestUrl(selectedSession.gitUrl, branchName)
+	}, [selectedSession.gitUrl, branchName])
+
 	return (
 		<div className="am-session-detail">
 			<div className="am-detail-header">
@@ -67,13 +72,26 @@ export function SessionDetail() {
 						)}
 						<span>{formatRelativeTime(selectedSession.startTime, timeLabels)}</span>
 						{isWorktree ? (
-							<div
-								className="am-worktree-badge"
-								style={{ display: "flex", alignItems: "center", gap: 4 }}
-								title={branchName || t("sessionDetail.runningInWorktree")}>
-								<GitBranch size={12} />
-								<span>{branchName || t("sidebar.worktree")}</span>
-							</div>
+							<>
+								<div
+									className="am-worktree-badge"
+									style={{ display: "flex", alignItems: "center", gap: 4 }}
+									title={branchName || t("sessionDetail.runningInWorktree")}>
+									<GitBranch size={12} />
+									<span>{branchName || t("sidebar.worktree")}</span>
+								</div>
+								{prLink && (
+									<a
+										href={prLink}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="am-icon-btn"
+										title={t("sessionDetail.createPr", { defaultValue: "Create Pull Request" })}
+										style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
+										<Github size={12} />
+									</a>
+								)}
+							</>
 						) : (
 							<div
 								className="am-local-badge"
@@ -169,6 +187,28 @@ function PendingSessionView({
 			</div>
 		</div>
 	)
+}
+
+function getPullRequestUrl(gitUrl: string, branch: string): string | null {
+	try {
+		// Handle git@github.com:Org/Repo.git
+		let url = gitUrl
+		if (url.startsWith("git@")) {
+			url = url.replace(":", "/").replace("git@", "https://")
+		}
+		// Remove .git suffix
+		if (url.endsWith(".git")) {
+			url = url.slice(0, -4)
+		}
+
+		// Check if it's a GitHub URL (simple check)
+		if (url.includes("github.com")) {
+			return `${url}/compare/${encodeURIComponent(branch)}?expand=1`
+		}
+		return null
+	} catch {
+		return null
+	}
 }
 
 function NewAgentForm() {

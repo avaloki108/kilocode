@@ -39,7 +39,8 @@
 		"waitingForCli": "Initializing agent session...",
 		"autoModeWarning": "Running in full-auto mode - agent will execute actions without confirmation",
 		"cancelCreating": "Cancel session creation",
-		"cancelButton": "Cancel"
+		"cancelButton": "Cancel",
+		"createPr": "Create Pull Request"
 	},
 	"messages": {
 		"waiting": "Waiting for agent response...",
