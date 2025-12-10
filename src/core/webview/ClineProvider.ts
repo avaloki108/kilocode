@@ -3441,10 +3441,12 @@ ${prompt}
 			...getFastApply(),
 			...getOpenRouter(),
 			...getAutoApproveSettings(),
+			// kilocode_change start - Add organization ID to telemetry
 			// Add organization ID if available
 			...(apiConfiguration.kilocodeOrganizationId && {
 				kilocodeOrganizationId: apiConfiguration.kilocodeOrganizationId,
 			}),
+			// kilocode_change end
 			// kilocode_change end
 			...(await this.getTaskProperties()),
 			...(await this.getGitProperties()),

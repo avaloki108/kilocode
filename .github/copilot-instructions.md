@@ -1,3 +1,4 @@
+<!-- kilocode_change - new file -->
 # Kilocode Change Marking Guidelines
 
 We are a fork of Roo. We regularly merge in the Roo codebase. To enable us to merge more easily, we mark all
