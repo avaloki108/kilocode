@@ -1838,11 +1838,13 @@ export class AgentManagerProvider implements vscode.Disposable {
 			`[AgentManager] Starting cloud session with prompt: ${prompt.substring(0, 100)}...`,
 		)
 
-		// Get the kilocodeToken from provider state
+		// Get the kilocodeToken and organizationId from provider state
 		let kilocodeToken: string | undefined
+		let kilocodeOrganizationId: string | undefined
 		try {
 			const { apiConfiguration } = await this.provider.getState()
 			kilocodeToken = apiConfiguration?.kilocodeToken
+			kilocodeOrganizationId = apiConfiguration?.kilocodeOrganizationId
 		} catch (error) {
 			this.outputChannel.appendLine(
 				`[AgentManager] Failed to get provider state: ${error instanceof Error ? error.message : String(error)}`,
@@ -1905,7 +1907,7 @@ export class AgentManagerProvider implements vscode.Disposable {
 		try {
 			// Prepare the cloud session
 			this.outputChannel.appendLine(
-				`[AgentManager] Preparing cloud agent session with githubRepo: ${githubRepo}, mode: ${mode}, model: ${model}`,
+				`[AgentManager] Preparing cloud agent session with githubRepo: ${githubRepo}, mode: ${mode}, model: ${model}, organizationId: ${kilocodeOrganizationId ?? "none"}`,
 			)
 			const prepareResponse = await cloudAgentService.prepareSession({
 				githubRepo,
@@ -1913,6 +1915,7 @@ export class AgentManagerProvider implements vscode.Disposable {
 				mode,
 				model,
 				kilocodeToken: kilocodeToken!,
+				organizationId: kilocodeOrganizationId,
 			})
 
 			this.outputChannel.appendLine(
