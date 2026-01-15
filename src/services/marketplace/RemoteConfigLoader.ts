@@ -22,15 +22,10 @@ const mcpMarketplaceResponse = z.object({
 	items: z.array(mcpMarketplaceItemSchema),
 })
 
-// kilocode_change start - options interface for loadAllItems
-export interface LoadAllItemsOptions {
-	hideMarketplaceMcps?: boolean
-	includeSkills?: boolean
-}
-
+// kilocode_change start - result interface for loadAllItems
 export interface LoadAllItemsResult {
 	items: MarketplaceItem[]
-	skills?: Skill[]
+	skills: Skill[]
 }
 // kilocode_change end
 
@@ -47,13 +42,11 @@ export class RemoteConfigLoader {
 	// 	this.apiBaseUrl = getKiloBaseUriFromToken()
 	// }
 
-	// kilocode_change start - updated signature to support skills
-	async loadAllItems(options: LoadAllItemsOptions = {}): Promise<LoadAllItemsResult> {
-		const { hideMarketplaceMcps = false, includeSkills = false } = options
-
+	// kilocode_change start - updated signature to support skills (always included)
+	async loadAllItems(hideMarketplaceMcps = false): Promise<LoadAllItemsResult> {
 		const modesPromise = this.fetchModes()
 		const mcpsPromise = hideMarketplaceMcps ? Promise.resolve([]) : this.fetchMcps()
-		const skillsPromise = includeSkills ? this.fetchSkills() : Promise.resolve(undefined)
+		const skillsPromise = this.fetchSkills()
 
 		const [modes, mcps, skills] = await Promise.all([modesPromise, mcpsPromise, skillsPromise])
 

@@ -15,9 +15,6 @@ import type {
 } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService } from "@roo-code/cloud"
-// kilocode_change start - skills marketplace
-import { SKILLS_MARKETPLACE_ENABLED } from "@roo-code/types"
-// kilocode_change end
 
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
@@ -64,11 +61,10 @@ export class MarketplaceManager {
 				errors.push(`Organization settings: ${orgErrorMessage}`)
 			}
 
-			// kilocode_change start - skills marketplace
-			const { items: allMarketplaceItems, skills } = await this.configLoader.loadAllItems({
-				hideMarketplaceMcps: orgSettings?.hideMarketplaceMcps,
-				includeSkills: SKILLS_MARKETPLACE_ENABLED,
-			})
+			// kilocode_change start - skills marketplace (always included)
+			const { items: allMarketplaceItems, skills } = await this.configLoader.loadAllItems(
+				orgSettings?.hideMarketplaceMcps,
+			)
 			// kilocode_change end
 			let organizationMcps: MarketplaceItem[] = []
 			let marketplaceItems = allMarketplaceItems

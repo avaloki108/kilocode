@@ -168,7 +168,7 @@ describe("MarketplaceManager", () => {
 			]
 
 			// Mock the loadAllItems method
-			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems })
+			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems, skills: [] })
 
 			const result = await manager.getMarketplaceItems()
 
@@ -222,7 +222,7 @@ describe("MarketplaceManager", () => {
 				},
 			]
 
-			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems })
+			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems, skills: [] })
 
 			const result = await manager.getMarketplaceItems()
 
@@ -266,7 +266,7 @@ describe("MarketplaceManager", () => {
 				},
 			]
 
-			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems })
+			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems, skills: [] })
 
 			const result = await manager.getMarketplaceItems()
 
@@ -293,7 +293,7 @@ describe("MarketplaceManager", () => {
 				},
 			]
 
-			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems })
+			vi.spyOn(manager["configLoader"], "loadAllItems").mockResolvedValue({ items: mockItems, skills: [] })
 
 			const result = await manager.getMarketplaceItems()
 
