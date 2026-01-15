@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react"
-import { Skill } from "@roo-code/types"
+import { SkillMarketplaceItem } from "@roo-code/types"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { SkillItemCard } from "./components/SkillItemCard"
 import { Input } from "@/components/ui/input"
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface SkillsMarketplaceProps {
-	skills: Skill[]
+	skills: SkillMarketplaceItem[]
 	isLoading: boolean
 }
 

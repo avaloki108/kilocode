@@ -1974,13 +1974,12 @@ export class ClineProvider
 				}),
 			])
 
-			// Send marketplace data separately (including skills)
+			// Send marketplace data separately (skills are now included in marketplaceItems with type: "skill")
 			this.postMessageToWebview({
 				type: "marketplaceData",
 				organizationMcps: marketplaceResult.organizationMcps || [],
 				marketplaceItems: marketplaceResult.marketplaceItems || [],
 				marketplaceInstalledMetadata: marketplaceInstalledMetadata || { project: {}, global: {} },
-				skills: "skills" in marketplaceResult ? marketplaceResult.skills || [] : [], // kilocode_change - include skills in unified marketplace data
 				errors: marketplaceResult.errors,
 			})
 		} catch (error) {

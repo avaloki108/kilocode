@@ -218,7 +218,7 @@ export function MarketplaceView({ stateManager, onDone, targetTab, hideHeader = 
 					)}
 					{/* kilocode_change start - Skills marketplace tab content */}
 					{SKILLS_MARKETPLACE_ENABLED && state.activeTab === "skills" && (
-						<SkillsMarketplace skills={state.skills} isLoading={state.isFetching} />
+						<SkillsMarketplace skills={stateManager.getSkills()} isLoading={state.isFetching} />
 					)}
 					{/* kilocode_change end */}
 				</TabContent>

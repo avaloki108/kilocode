@@ -4,15 +4,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 import * as yaml from "yaml"
 
-import type {
-	OrganizationSettings,
-	MarketplaceItem,
-	MarketplaceItemType,
-	McpMarketplaceItem,
-	// kilocode_change start - skills marketplace
-	Skill,
-	// kilocode_change end
-} from "@roo-code/types"
+import type { OrganizationSettings, MarketplaceItem, MarketplaceItemType, McpMarketplaceItem } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService } from "@roo-code/cloud"
 
@@ -24,12 +16,10 @@ import type { CustomModesManager } from "../../core/config/CustomModesManager"
 import { RemoteConfigLoader } from "./RemoteConfigLoader"
 import { SimpleInstaller } from "./SimpleInstaller"
 
+// kilocode_change - skills are now included in marketplaceItems with type: "skill"
 export interface MarketplaceItemsResponse {
 	organizationMcps: MarketplaceItem[]
 	marketplaceItems: MarketplaceItem[]
-	// kilocode_change start - skills marketplace
-	skills?: Skill[]
-	// kilocode_change end
 	errors?: string[]
 }
 
@@ -61,11 +51,8 @@ export class MarketplaceManager {
 				errors.push(`Organization settings: ${orgErrorMessage}`)
 			}
 
-			// kilocode_change start - skills marketplace (always included)
-			const { items: allMarketplaceItems, skills } = await this.configLoader.loadAllItems(
-				orgSettings?.hideMarketplaceMcps,
-			)
-			// kilocode_change end
+			// kilocode_change - skills are now included as MarketplaceItem with type: "skill"
+			const allMarketplaceItems = await this.configLoader.loadAllItems(orgSettings?.hideMarketplaceMcps)
 			let organizationMcps: MarketplaceItem[] = []
 			let marketplaceItems = allMarketplaceItems
 
@@ -82,7 +69,7 @@ export class MarketplaceManager {
 				if (orgSettings.hiddenMcps && orgSettings.hiddenMcps.length > 0) {
 					const hiddenMcpIds = new Set(orgSettings.hiddenMcps)
 					marketplaceItems = allMarketplaceItems.filter(
-						(item) => item.type !== "mcp" || !hiddenMcpIds.has(item.id),
+						(item: MarketplaceItem) => item.type !== "mcp" || !hiddenMcpIds.has(item.id),
 					)
 				}
 			}
@@ -90,9 +77,6 @@ export class MarketplaceManager {
 			return {
 				organizationMcps,
 				marketplaceItems,
-				// kilocode_change start - skills marketplace
-				skills,
-				// kilocode_change end
 				errors: errors.length > 0 ? errors : undefined,
 			}
 		} catch (error) {

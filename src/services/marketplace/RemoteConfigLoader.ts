@@ -5,12 +5,10 @@ import { getApiUrl } from "@roo-code/types" // kilocode_change
 import {
 	type MarketplaceItem,
 	type MarketplaceItemType,
+	type SkillMarketplaceItem, // kilocode_change
 	modeMarketplaceItemSchema,
 	mcpMarketplaceItemSchema,
-	// kilocode_change start - skills marketplace
-	type Skill,
-	skillsMarketplaceCatalogSchema,
-	// kilocode_change end
+	skillsMarketplaceCatalogSchema, // kilocode_change
 } from "@roo-code/types"
 //import { getRooCodeApiUrl } from "@roo-code/cloud" kilocode_change: use our own api
 
@@ -22,19 +20,9 @@ const mcpMarketplaceResponse = z.object({
 	items: z.array(mcpMarketplaceItemSchema),
 })
 
-// kilocode_change start - result interface for loadAllItems
-export interface LoadAllItemsResult {
-	items: MarketplaceItem[]
-	skills: Skill[]
-}
-// kilocode_change end
-
 export class RemoteConfigLoader {
 	// private apiBaseUrl: string // kilocode_change
 	private cache: Map<string, { data: MarketplaceItem[]; timestamp: number }> = new Map()
-	// kilocode_change start - separate cache for skills
-	private skillsCache: { data: Skill[]; timestamp: number } | null = null
-	// kilocode_change end
 	private cacheDuration = 5 * 60 * 1000 // 5 minutes
 
 	// kilocode_change - empty constructor
@@ -42,20 +30,16 @@ export class RemoteConfigLoader {
 	// 	this.apiBaseUrl = getKiloBaseUriFromToken()
 	// }
 
-	// kilocode_change start - updated signature to support skills (always included)
-	async loadAllItems(hideMarketplaceMcps = false): Promise<LoadAllItemsResult> {
+	// kilocode_change - skills are now included as MarketplaceItem with type: "skill"
+	async loadAllItems(hideMarketplaceMcps = false): Promise<MarketplaceItem[]> {
 		const modesPromise = this.fetchModes()
 		const mcpsPromise = hideMarketplaceMcps ? Promise.resolve([]) : this.fetchMcps()
 		const skillsPromise = this.fetchSkills()
 
 		const [modes, mcps, skills] = await Promise.all([modesPromise, mcpsPromise, skillsPromise])
 
-		return {
-			items: [...modes, ...mcps],
-			skills,
-		}
+		return [...modes, ...mcps, ...skills]
 	}
-	// kilocode_change end
 
 	private async fetchModes(): Promise<MarketplaceItem[]> {
 		const cacheKey = "modes"
@@ -103,15 +87,13 @@ export class RemoteConfigLoader {
 		return items
 	}
 
-	// kilocode_change start - fetch skills from marketplace API
-	private async fetchSkills(): Promise<Skill[]> {
-		// Check skills cache
-		if (this.skillsCache) {
-			const now = Date.now()
-			if (now - this.skillsCache.timestamp <= this.cacheDuration) {
-				return this.skillsCache.data
-			}
-			this.skillsCache = null
+	// kilocode_change start - fetch skills from marketplace API and transform to MarketplaceItem
+	private async fetchSkills(): Promise<MarketplaceItem[]> {
+		const cacheKey = "skills"
+		const cached = this.getFromCache(cacheKey)
+
+		if (cached) {
+			return cached
 		}
 
 		const url = getApiUrl("/api/marketplace/skills")
@@ -120,13 +102,21 @@ export class RemoteConfigLoader {
 		const yamlData = yaml.parse(data)
 		const validated = skillsMarketplaceCatalogSchema.parse(yamlData)
 
-		// Cache the skills
-		this.skillsCache = {
-			data: validated.items,
-			timestamp: Date.now(),
-		}
+		// Transform raw skills to MarketplaceItem format
+		const items: MarketplaceItem[] = validated.items.map(
+			(rawSkill): SkillMarketplaceItem => ({
+				type: "skill" as const,
+				id: rawSkill.id,
+				name: rawSkill.id, // Use id as name (UI derives display name from id)
+				description: rawSkill.description,
+				category: rawSkill.category,
+				githubUrl: rawSkill.githubUrl,
+				rawUrl: rawSkill.rawUrl,
+			}),
+		)
 
-		return validated.items
+		this.setCache(cacheKey, items)
+		return items
 	}
 	// kilocode_change end
 
@@ -157,8 +147,8 @@ export class RemoteConfigLoader {
 	}
 
 	async getItem(id: string, type: MarketplaceItemType): Promise<MarketplaceItem | null> {
-		const { items } = await this.loadAllItems()
-		return items.find((item) => item.id === id && item.type === type) || null
+		const items = await this.loadAllItems()
+		return items.find((item: MarketplaceItem) => item.id === id && item.type === type) || null
 	}
 
 	private getFromCache(key: string): MarketplaceItem[] | null {
@@ -183,6 +173,5 @@ export class RemoteConfigLoader {
 
 	clearCache(): void {
 		this.cache.clear()
-		this.skillsCache = null // kilocode_change - also clear skills cache
 	}
 }

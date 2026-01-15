@@ -16,7 +16,6 @@ import type {
 	ShareVisibility,
 	QueuedMessage,
 	SerializedCustomToolDefinition,
-	Skill, // kilocode_change - Skills marketplace type
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
@@ -313,7 +312,6 @@ export interface ExtensionMessage {
 	marketplaceItems?: MarketplaceItem[]
 	organizationMcps?: MarketplaceItem[]
 	marketplaceInstalledMetadata?: MarketplaceInstalledMetadata
-	skills?: Skill[] // kilocode_change - Skills marketplace items
 	fixedCode?: string | null // For mermaidFixResponse // kilocode_change
 	errors?: string[]
 	visibility?: ShareVisibility

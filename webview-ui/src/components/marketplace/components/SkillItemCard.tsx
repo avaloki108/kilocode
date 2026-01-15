@@ -1,11 +1,11 @@
 import React from "react"
-import { Skill } from "@roo-code/types"
+import { SkillMarketplaceItem } from "@roo-code/types"
 import { vscode } from "@/utils/vscode"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Button } from "@/components/ui/button"
 
 interface SkillItemCardProps {
-	skill: Skill
+	skill: SkillMarketplaceItem
 }
 
 export const SkillItemCard: React.FC<SkillItemCardProps> = ({ skill }) => {

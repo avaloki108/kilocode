@@ -97,15 +97,16 @@ describe("RemoteConfigLoader", () => {
 				}),
 			)
 
-			expect(result.items).toHaveLength(2)
-			expect(result.items[0]).toEqual({
+			// Result is now a flat array of MarketplaceItem[] including skills
+			expect(result).toHaveLength(3)
+			expect(result[0]).toEqual({
 				type: "mode",
 				id: "test-mode",
 				name: "Test Mode",
 				description: "A test mode",
 				content: "customModes:\n  - slug: test\n    name: Test",
 			})
-			expect(result.items[1]).toEqual({
+			expect(result[1]).toEqual({
 				type: "mcp",
 				id: "test-mcp",
 				name: "Test MCP",
@@ -113,9 +114,11 @@ describe("RemoteConfigLoader", () => {
 				url: "https://github.com/test/test-mcp",
 				content: '{"command": "test"}',
 			})
-			expect(result.skills).toHaveLength(1)
-			expect(result.skills[0]).toEqual({
+			// Skills are now included in the array with type: "skill"
+			expect(result[2]).toEqual({
+				type: "skill",
 				id: "test-skill",
+				name: "test-skill", // Name is derived from id
 				description: "A test skill",
 				category: "testing",
 				githubUrl: "https://github.com/test/test-skill",
@@ -196,8 +199,9 @@ describe("RemoteConfigLoader", () => {
 
 			// Should have retried modes endpoint 3 times (2 failures + 1 success)
 			expect(modesCallCount).toBe(3)
-			expect(result.items).toHaveLength(1)
-			expect(result.items[0].type).toBe("mode")
+			// Result is now a flat array
+			expect(result).toHaveLength(1)
+			expect(result[0].type).toBe("mode")
 		})
 
 		it("should throw error after max retries", async () => {
