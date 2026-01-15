@@ -1930,6 +1930,9 @@ export class AgentManagerProvider implements vscode.Disposable {
 			const { apiConfiguration } = await this.provider.getState()
 			kilocodeToken = apiConfiguration?.kilocodeToken
 			kilocodeOrganizationId = apiConfiguration?.kilocodeOrganizationId
+			this.outputChannel.appendLine(
+				`[AgentManager] Provider state retrieved - kilocodeOrganizationId: ${kilocodeOrganizationId ?? "(not set)"}`,
+			)
 		} catch (error) {
 			this.outputChannel.appendLine(
 				`[AgentManager] Failed to get provider state: ${error instanceof Error ? error.message : String(error)}`,

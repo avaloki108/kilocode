@@ -64,7 +64,18 @@ export class CloudAgentService {
 			organizationId: params.organizationId,
 		}
 
-		const response = await fetch(getCloudAgentPrepareUrl(), {
+		const url = getCloudAgentPrepareUrl()
+
+		console.log("[CloudAgentService] prepareSession request:", {
+			url,
+			githubRepo: params.githubRepo,
+			mode: params.mode,
+			model: params.model,
+			organizationId: params.organizationId ?? "(not set)",
+			promptLength: params.prompt.length,
+		})
+
+		const response = await fetch(url, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${params.kilocodeToken}`,
@@ -78,6 +89,10 @@ export class CloudAgentService {
 			let errorMessage = `Failed to prepare cloud agent session: ${response.status}`
 			try {
 				const errorData = await response.json()
+				console.error("[CloudAgentService] prepareSession error response:", {
+					status: response.status,
+					errorData,
+				})
 				if (errorData.error) {
 					errorMessage = errorData.error
 				}
@@ -94,6 +109,12 @@ export class CloudAgentService {
 		}
 
 		const data = await response.json()
+
+		console.log("[CloudAgentService] prepareSession response:", {
+			kiloSessionId: data.kiloSessionId,
+			cloudAgentSessionId: data.cloudAgentSessionId,
+		})
+
 		const validated = CloudAgentPrepareResponseSchema.safeParse(data)
 
 		if (!validated.success) {
