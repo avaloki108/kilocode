@@ -9,7 +9,6 @@ import type { Theme } from "../../types/theme.js"
 import { logs } from "../../services/logs.js"
 import { getTelemetryService } from "../../services/telemetry/index.js"
 import { applyEnvOverrides } from "../../config/env-config.js"
-import { syncCodebaseIndexConfigToGlobalState } from "../../config/syncIndexConfig.js"
 
 // Core config atom - holds the current configuration
 export const configAtom = atom<CLIConfig>(DEFAULT_CONFIG)
@@ -63,9 +62,6 @@ export const loadConfigAtom = atom(null, async (get, set, mode?: string) => {
 		finalConfig = applyEnvOverrides(finalConfig)
 
 		set(configAtom, finalConfig)
-
-		// Sync codebase index config to global state so extension can read it
-		syncCodebaseIndexConfigToGlobalState(finalConfig.codebaseIndexConfig)
 
 		if (result.validation.valid) {
 			logs.info("Config loaded successfully", "ConfigAtoms", { mode: finalConfig.mode })
