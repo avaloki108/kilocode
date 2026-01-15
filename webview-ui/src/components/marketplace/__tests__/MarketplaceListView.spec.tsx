@@ -21,6 +21,8 @@ const mockState: ViewState = {
 	organizationMcps: [],
 	displayItems: [],
 	displayOrganizationMcps: [],
+	skills: [], // kilocode_change
+	isFetchingSkills: false, // kilocode_change
 	isFetching: false,
 	activeTab: "mcp",
 	filters: {

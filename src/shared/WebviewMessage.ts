@@ -235,6 +235,7 @@ export interface WebviewMessage {
 		| "removeInstalledMarketplaceItem"
 		| "marketplaceInstallResult"
 		| "fetchMarketplaceData"
+		| "fetchSkillsMarketplaceData" // kilocode_change - Fetch skills marketplace data
 		| "switchTab"
 		| "profileThresholds" // kilocode_change
 		| "editMessage" // kilocode_change
@@ -304,7 +305,7 @@ export interface WebviewMessage {
 	shareId?: string // kilocode_change - for sessionFork
 	sessionId?: string // kilocode_change - for sessionSelect
 	editedMessageContent?: string
-	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "cloud" | "auth" // kilocode_change
+	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "cloud" | "auth" | "skills" // kilocode_change
 	disabled?: boolean
 	context?: string
 	dataUri?: string

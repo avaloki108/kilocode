@@ -3605,6 +3605,13 @@ export const webviewMessageHandler = async (
 			break
 		}
 
+		// kilocode_change start - Fetch skills marketplace data
+		case "fetchSkillsMarketplaceData": {
+			await provider.fetchSkillsMarketplaceData()
+			break
+		}
+		// kilocode_change end
+
 		case "installMarketplaceItem": {
 			if (marketplaceManager && message.mpItem && message.mpInstallOptions) {
 				try {

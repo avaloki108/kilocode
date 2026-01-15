@@ -11,7 +11,7 @@
  * 3. Using minimal state updates to avoid resetting scroll position
  */
 
-import { MarketplaceItem } from "@roo-code/types"
+import { MarketplaceItem, Skill } from "@roo-code/types"
 import { vscode } from "../../utils/vscode"
 import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
 import type { MarketplaceInstalledMetadata } from "../../../../src/shared/ExtensionMessage"
@@ -21,8 +21,10 @@ export interface ViewState {
 	organizationMcps: MarketplaceItem[]
 	displayItems?: MarketplaceItem[] // Items currently being displayed (filtered or all)
 	displayOrganizationMcps?: MarketplaceItem[] // Organization MCPs currently being displayed (filtered or all)
+	skills: Skill[] // kilocode_change - Skills marketplace items
+	isFetchingSkills: boolean // kilocode_change - Loading state for skills
 	isFetching: boolean
-	activeTab: "mcp" | "mode"
+	activeTab: "mcp" | "mode" | "skills" // kilocode_change - Added skills tab
 	filters: {
 		type: string
 		search: string
@@ -38,6 +40,11 @@ type TransitionPayloads = {
 	FETCH_ERROR: undefined
 	SET_ACTIVE_TAB: { tab: ViewState["activeTab"] }
 	UPDATE_FILTERS: { filters: Partial<ViewState["filters"]> }
+	// kilocode_change start - Skills marketplace transitions
+	FETCH_SKILLS: undefined
+	FETCH_SKILLS_COMPLETE: { skills: Skill[] }
+	FETCH_SKILLS_ERROR: undefined
+	// kilocode_change end
 }
 
 export interface ViewStateTransition {
@@ -62,6 +69,8 @@ export class MarketplaceViewStateManager {
 			organizationMcps: [],
 			displayItems: [], // Always initialize as empty array, not undefined
 			displayOrganizationMcps: [], // Always initialize as empty array, not undefined
+			skills: [], // kilocode_change - Initialize skills as empty array
+			isFetchingSkills: false, // kilocode_change - Skills loading state
 			isFetching: true, // Start with loading state for initial load
 			activeTab: "mcp",
 			filters: {
@@ -112,6 +121,7 @@ export class MarketplaceViewStateManager {
 			? [...this.state.displayOrganizationMcps]
 			: [...organizationMcps]
 		const tags = this.state.filters.tags.length ? [...this.state.filters.tags] : []
+		const skills = this.state.skills?.length ? [...this.state.skills] : [] // kilocode_change
 
 		// Create minimal new state object
 		return {
@@ -120,6 +130,7 @@ export class MarketplaceViewStateManager {
 			organizationMcps,
 			displayItems,
 			displayOrganizationMcps,
+			skills, // kilocode_change
 			filters: {
 				...this.state.filters,
 				tags,
@@ -291,6 +302,37 @@ export class MarketplaceViewStateManager {
 
 				break
 			}
+
+			// kilocode_change start - Skills marketplace transitions
+			case "FETCH_SKILLS": {
+				this.state = {
+					...this.state,
+					isFetchingSkills: true,
+				}
+				this.notifyStateChange()
+				break
+			}
+
+			case "FETCH_SKILLS_COMPLETE": {
+				const { skills } = transition.payload as TransitionPayloads["FETCH_SKILLS_COMPLETE"]
+				this.state = {
+					...this.state,
+					skills: [...skills],
+					isFetchingSkills: false,
+				}
+				this.notifyStateChange()
+				break
+			}
+
+			case "FETCH_SKILLS_ERROR": {
+				this.state = {
+					...this.state,
+					isFetchingSkills: false,
+				}
+				this.notifyStateChange()
+				break
+			}
+			// kilocode_change end
 		}
 	}
 
@@ -482,5 +524,17 @@ export class MarketplaceViewStateManager {
 			// Notify state change
 			this.notifyStateChange()
 		}
+
+		// kilocode_change start - Handle skills marketplace data
+		if (message.type === "skillsMarketplaceData") {
+			const skills = message.skills || []
+			this.state = {
+				...this.state,
+				skills: [...skills],
+				isFetchingSkills: false,
+			}
+			this.notifyStateChange()
+		}
+		// kilocode_change end
 	}
 }
