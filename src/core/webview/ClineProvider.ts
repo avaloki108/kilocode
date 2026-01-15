@@ -1974,12 +1974,13 @@ export class ClineProvider
 				}),
 			])
 
-			// Send marketplace data separately
+			// Send marketplace data separately (including skills)
 			this.postMessageToWebview({
 				type: "marketplaceData",
 				organizationMcps: marketplaceResult.organizationMcps || [],
 				marketplaceItems: marketplaceResult.marketplaceItems || [],
 				marketplaceInstalledMetadata: marketplaceInstalledMetadata || { project: {}, global: {} },
+				skills: "skills" in marketplaceResult ? marketplaceResult.skills || [] : [], // kilocode_change - include skills in unified marketplace data
 				errors: marketplaceResult.errors,
 			})
 		} catch (error) {
@@ -2002,43 +2003,6 @@ export class ClineProvider
 			}
 		}
 	}
-
-	// kilocode_change start - Fetch skills marketplace data
-	/**
-	 * Fetches skills marketplace data on demand
-	 */
-	async fetchSkillsMarketplaceData() {
-		try {
-			const { getApiUrl, skillsMarketplaceCatalogSchema } = await import("@roo-code/types")
-			const yaml = await import("yaml")
-			const axios = (await import("axios")).default
-
-			const url = getApiUrl("/api/marketplace/skills")
-			const response = await axios.get(url, {
-				timeout: 10000,
-				headers: {
-					Accept: "application/x-yaml",
-				},
-			})
-
-			const yamlData = yaml.parse(response.data)
-			const validated = skillsMarketplaceCatalogSchema.parse(yamlData)
-
-			this.postMessageToWebview({
-				type: "skillsMarketplaceData",
-				skills: validated.items,
-			})
-		} catch (error) {
-			console.error("Failed to fetch skills marketplace data:", error)
-
-			// Send empty data on error
-			this.postMessageToWebview({
-				type: "skillsMarketplaceData",
-				skills: [],
-			})
-		}
-	}
-	// kilocode_change end
 
 	/**
 	 * Checks if there is a file-based system prompt override for the given mode

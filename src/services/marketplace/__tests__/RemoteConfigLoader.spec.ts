@@ -63,7 +63,7 @@ describe("RemoteConfigLoader", () => {
 				return Promise.reject(new Error("Unknown URL"))
 			})
 
-			const items = await loader.loadAllItems()
+			const result = await loader.loadAllItems()
 
 			expect(mockedAxios.get).toHaveBeenCalledTimes(2)
 			expect(mockedAxios.get).toHaveBeenCalledWith(
@@ -87,15 +87,15 @@ describe("RemoteConfigLoader", () => {
 				}),
 			)
 
-			expect(items).toHaveLength(2)
-			expect(items[0]).toEqual({
+			expect(result.items).toHaveLength(2)
+			expect(result.items[0]).toEqual({
 				type: "mode",
 				id: "test-mode",
 				name: "Test Mode",
 				description: "A test mode",
 				content: "customModes:\n  - slug: test\n    name: Test",
 			})
-			expect(items[1]).toEqual({
+			expect(result.items[1]).toEqual({
 				type: "mcp",
 				id: "test-mcp",
 				name: "Test MCP",
@@ -165,12 +165,12 @@ describe("RemoteConfigLoader", () => {
 				return Promise.reject(new Error("Unknown URL"))
 			})
 
-			const items = await loader.loadAllItems()
+			const result = await loader.loadAllItems()
 
 			// Should have retried modes endpoint 3 times (2 failures + 1 success)
 			expect(modesCallCount).toBe(3)
-			expect(items).toHaveLength(1)
-			expect(items[0].type).toBe("mode")
+			expect(result.items).toHaveLength(1)
+			expect(result.items[0].type).toBe("mode")
 		})
 
 		it("should throw error after max retries", async () => {

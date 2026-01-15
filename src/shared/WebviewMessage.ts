@@ -235,7 +235,6 @@ export interface WebviewMessage {
 		| "removeInstalledMarketplaceItem"
 		| "marketplaceInstallResult"
 		| "fetchMarketplaceData"
-		| "fetchSkillsMarketplaceData" // kilocode_change - Fetch skills marketplace data
 		| "switchTab"
 		| "profileThresholds" // kilocode_change
 		| "editMessage" // kilocode_change

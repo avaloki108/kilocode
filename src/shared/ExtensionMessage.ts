@@ -163,7 +163,6 @@ export interface ExtensionMessage {
 		| "marketplaceInstallResult"
 		| "marketplaceRemoveResult"
 		| "marketplaceData"
-		| "skillsMarketplaceData" // kilocode_change - Skills marketplace data
 		| "mermaidFixResponse" // kilocode_change
 		| "tasksByIdResponse" // kilocode_change
 		| "taskHistoryResponse" // kilocode_change

@@ -124,13 +124,8 @@ export function MarketplaceView({ stateManager, onDone, targetTab, hideHeader = 
 	const tabWidth = `${100 / tabCount}%`
 	// kilocode_change end
 
-	// kilocode_change start - Fetch skills when skills tab is active
-	useEffect(() => {
-		if (SKILLS_MARKETPLACE_ENABLED && state.activeTab === "skills" && state.skills.length === 0) {
-			vscode.postMessage({ type: "fetchSkillsMarketplaceData" })
-		}
-	}, [state.activeTab, state.skills.length])
-	// kilocode_change end
+	// kilocode_change - Skills are now fetched as part of fetchMarketplaceData
+	// No separate fetch needed - skills come with the unified marketplace data
 
 	return (
 		<TooltipProvider delayDuration={300}>
@@ -223,7 +218,7 @@ export function MarketplaceView({ stateManager, onDone, targetTab, hideHeader = 
 					)}
 					{/* kilocode_change start - Skills marketplace tab content */}
 					{SKILLS_MARKETPLACE_ENABLED && state.activeTab === "skills" && (
-						<SkillsMarketplace skills={state.skills} isLoading={state.isFetchingSkills} />
+						<SkillsMarketplace skills={state.skills} isLoading={state.isFetching} />
 					)}
 					{/* kilocode_change end */}
 				</TabContent>

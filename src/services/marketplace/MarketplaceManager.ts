@@ -4,9 +4,20 @@ import * as path from "path"
 import * as vscode from "vscode"
 import * as yaml from "yaml"
 
-import type { OrganizationSettings, MarketplaceItem, MarketplaceItemType, McpMarketplaceItem } from "@roo-code/types"
+import type {
+	OrganizationSettings,
+	MarketplaceItem,
+	MarketplaceItemType,
+	McpMarketplaceItem,
+	// kilocode_change start - skills marketplace
+	Skill,
+	// kilocode_change end
+} from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 import { CloudService } from "@roo-code/cloud"
+// kilocode_change start - skills marketplace
+import { SKILLS_MARKETPLACE_ENABLED } from "@roo-code/types"
+// kilocode_change end
 
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
@@ -19,6 +30,9 @@ import { SimpleInstaller } from "./SimpleInstaller"
 export interface MarketplaceItemsResponse {
 	organizationMcps: MarketplaceItem[]
 	marketplaceItems: MarketplaceItem[]
+	// kilocode_change start - skills marketplace
+	skills?: Skill[]
+	// kilocode_change end
 	errors?: string[]
 }
 
@@ -50,7 +64,12 @@ export class MarketplaceManager {
 				errors.push(`Organization settings: ${orgErrorMessage}`)
 			}
 
-			const allMarketplaceItems = await this.configLoader.loadAllItems(orgSettings?.hideMarketplaceMcps)
+			// kilocode_change start - skills marketplace
+			const { items: allMarketplaceItems, skills } = await this.configLoader.loadAllItems({
+				hideMarketplaceMcps: orgSettings?.hideMarketplaceMcps,
+				includeSkills: SKILLS_MARKETPLACE_ENABLED,
+			})
+			// kilocode_change end
 			let organizationMcps: MarketplaceItem[] = []
 			let marketplaceItems = allMarketplaceItems
 
@@ -75,6 +94,9 @@ export class MarketplaceManager {
 			return {
 				organizationMcps,
 				marketplaceItems,
+				// kilocode_change start - skills marketplace
+				skills,
+				// kilocode_change end
 				errors: errors.length > 0 ? errors : undefined,
 			}
 		} catch (error) {

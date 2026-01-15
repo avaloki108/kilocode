@@ -21,8 +21,7 @@ export interface ViewState {
 	organizationMcps: MarketplaceItem[]
 	displayItems?: MarketplaceItem[] // Items currently being displayed (filtered or all)
 	displayOrganizationMcps?: MarketplaceItem[] // Organization MCPs currently being displayed (filtered or all)
-	skills: Skill[] // kilocode_change - Skills marketplace items
-	isFetchingSkills: boolean // kilocode_change - Loading state for skills
+	skills: Skill[] // kilocode_change - Skills marketplace items (fetched with marketplaceData)
 	isFetching: boolean
 	activeTab: "mcp" | "mode" | "skills" // kilocode_change - Added skills tab
 	filters: {
@@ -40,11 +39,6 @@ type TransitionPayloads = {
 	FETCH_ERROR: undefined
 	SET_ACTIVE_TAB: { tab: ViewState["activeTab"] }
 	UPDATE_FILTERS: { filters: Partial<ViewState["filters"]> }
-	// kilocode_change start - Skills marketplace transitions
-	FETCH_SKILLS: undefined
-	FETCH_SKILLS_COMPLETE: { skills: Skill[] }
-	FETCH_SKILLS_ERROR: undefined
-	// kilocode_change end
 }
 
 export interface ViewStateTransition {
@@ -69,8 +63,7 @@ export class MarketplaceViewStateManager {
 			organizationMcps: [],
 			displayItems: [], // Always initialize as empty array, not undefined
 			displayOrganizationMcps: [], // Always initialize as empty array, not undefined
-			skills: [], // kilocode_change - Initialize skills as empty array
-			isFetchingSkills: false, // kilocode_change - Skills loading state
+			skills: [], // kilocode_change - Initialize skills as empty array (fetched with marketplaceData)
 			isFetching: true, // Start with loading state for initial load
 			activeTab: "mcp",
 			filters: {
@@ -302,37 +295,6 @@ export class MarketplaceViewStateManager {
 
 				break
 			}
-
-			// kilocode_change start - Skills marketplace transitions
-			case "FETCH_SKILLS": {
-				this.state = {
-					...this.state,
-					isFetchingSkills: true,
-				}
-				this.notifyStateChange()
-				break
-			}
-
-			case "FETCH_SKILLS_COMPLETE": {
-				const { skills } = transition.payload as TransitionPayloads["FETCH_SKILLS_COMPLETE"]
-				this.state = {
-					...this.state,
-					skills: [...skills],
-					isFetchingSkills: false,
-				}
-				this.notifyStateChange()
-				break
-			}
-
-			case "FETCH_SKILLS_ERROR": {
-				this.state = {
-					...this.state,
-					isFetchingSkills: false,
-				}
-				this.notifyStateChange()
-				break
-			}
-			// kilocode_change end
 		}
 	}
 
@@ -486,10 +448,12 @@ export class MarketplaceViewStateManager {
 		}
 
 		// Handle marketplace data updates (fetched on demand)
+		// kilocode_change - Skills are now included in marketplaceData message
 		if (message.type === "marketplaceData") {
 			const marketplaceItems = message.marketplaceItems
 			const organizationMcps = message.organizationMcps || []
 			const marketplaceInstalledMetadata = message.marketplaceInstalledMetadata
+			const skills = message.skills || [] // kilocode_change - Skills included in unified message
 
 			if (marketplaceItems !== undefined) {
 				// Always use the marketplace items from the extension when they're provided
@@ -518,23 +482,12 @@ export class MarketplaceViewStateManager {
 					displayItems: newDisplayItems,
 					displayOrganizationMcps: newDisplayOrganizationMcps,
 					installedMetadata: marketplaceInstalledMetadata || this.state.installedMetadata,
+					skills: [...skills], // kilocode_change - Include skills in state update
 				}
 			}
 
 			// Notify state change
 			this.notifyStateChange()
 		}
-
-		// kilocode_change start - Handle skills marketplace data
-		if (message.type === "skillsMarketplaceData") {
-			const skills = message.skills || []
-			this.state = {
-				...this.state,
-				skills: [...skills],
-				isFetchingSkills: false,
-			}
-			this.notifyStateChange()
-		}
-		// kilocode_change end
 	}
 }

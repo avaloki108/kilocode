@@ -7,6 +7,10 @@ import {
 	type MarketplaceItemType,
 	modeMarketplaceItemSchema,
 	mcpMarketplaceItemSchema,
+	// kilocode_change start - skills marketplace
+	type Skill,
+	skillsMarketplaceCatalogSchema,
+	// kilocode_change end
 } from "@roo-code/types"
 //import { getRooCodeApiUrl } from "@roo-code/cloud" kilocode_change: use our own api
 
@@ -18,9 +22,24 @@ const mcpMarketplaceResponse = z.object({
 	items: z.array(mcpMarketplaceItemSchema),
 })
 
+// kilocode_change start - options interface for loadAllItems
+export interface LoadAllItemsOptions {
+	hideMarketplaceMcps?: boolean
+	includeSkills?: boolean
+}
+
+export interface LoadAllItemsResult {
+	items: MarketplaceItem[]
+	skills?: Skill[]
+}
+// kilocode_change end
+
 export class RemoteConfigLoader {
 	// private apiBaseUrl: string // kilocode_change
 	private cache: Map<string, { data: MarketplaceItem[]; timestamp: number }> = new Map()
+	// kilocode_change start - separate cache for skills
+	private skillsCache: { data: Skill[]; timestamp: number } | null = null
+	// kilocode_change end
 	private cacheDuration = 5 * 60 * 1000 // 5 minutes
 
 	// kilocode_change - empty constructor
@@ -28,17 +47,22 @@ export class RemoteConfigLoader {
 	// 	this.apiBaseUrl = getKiloBaseUriFromToken()
 	// }
 
-	async loadAllItems(hideMarketplaceMcps = false): Promise<MarketplaceItem[]> {
-		const items: MarketplaceItem[] = []
+	// kilocode_change start - updated signature to support skills
+	async loadAllItems(options: LoadAllItemsOptions = {}): Promise<LoadAllItemsResult> {
+		const { hideMarketplaceMcps = false, includeSkills = false } = options
 
 		const modesPromise = this.fetchModes()
 		const mcpsPromise = hideMarketplaceMcps ? Promise.resolve([]) : this.fetchMcps()
+		const skillsPromise = includeSkills ? this.fetchSkills() : Promise.resolve(undefined)
 
-		const [modes, mcps] = await Promise.all([modesPromise, mcpsPromise])
+		const [modes, mcps, skills] = await Promise.all([modesPromise, mcpsPromise, skillsPromise])
 
-		items.push(...modes, ...mcps)
-		return items
+		return {
+			items: [...modes, ...mcps],
+			skills,
+		}
 	}
+	// kilocode_change end
 
 	private async fetchModes(): Promise<MarketplaceItem[]> {
 		const cacheKey = "modes"
@@ -86,6 +110,33 @@ export class RemoteConfigLoader {
 		return items
 	}
 
+	// kilocode_change start - fetch skills from marketplace API
+	private async fetchSkills(): Promise<Skill[]> {
+		// Check skills cache
+		if (this.skillsCache) {
+			const now = Date.now()
+			if (now - this.skillsCache.timestamp <= this.cacheDuration) {
+				return this.skillsCache.data
+			}
+			this.skillsCache = null
+		}
+
+		const url = getApiUrl("/api/marketplace/skills")
+		const data = await this.fetchWithRetry<string>(url)
+
+		const yamlData = yaml.parse(data)
+		const validated = skillsMarketplaceCatalogSchema.parse(yamlData)
+
+		// Cache the skills
+		this.skillsCache = {
+			data: validated.items,
+			timestamp: Date.now(),
+		}
+
+		return validated.items
+	}
+	// kilocode_change end
+
 	private async fetchWithRetry<T>(url: string, maxRetries = 3): Promise<T> {
 		let lastError: Error
 
@@ -113,7 +164,7 @@ export class RemoteConfigLoader {
 	}
 
 	async getItem(id: string, type: MarketplaceItemType): Promise<MarketplaceItem | null> {
-		const items = await this.loadAllItems()
+		const { items } = await this.loadAllItems()
 		return items.find((item) => item.id === id && item.type === type) || null
 	}
 
@@ -139,5 +190,6 @@ export class RemoteConfigLoader {
 
 	clearCache(): void {
 		this.cache.clear()
+		this.skillsCache = null // kilocode_change - also clear skills cache
 	}
 }
