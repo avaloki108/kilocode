@@ -11,6 +11,7 @@ const combine = <T>(items: T[], extras: T[]): T[] => {
 	return [...items, ...extras]
 }
 
+
 /**
  * Confidence scoring model constants.
  * These weights define how different attributes contribute to overall confidence:
@@ -19,6 +20,14 @@ const combine = <T>(items: T[], extras: T[]): T[] => {
  * - Multiple provenance sources increase confidence (cross-validation)
  * - Contradicted findings receive a penalty (conflicting information)
  */
+// kilocode_change start
+// Confidence scoring model:
+// - Start from a base confidence that is higher when we have at least one provenance entry.
+// - Add a fixed boost when we have any supporting evidence.
+// - Add a small boost for each additional provenance entry, up to a capped maximum.
+// - Subtract a penalty if the finding has been contradicted.
+// - Finally clamp the score into the [0, 1] range.
+
 const CONFIDENCE_BASE_WITH_PROVENANCE = 0.6
 const CONFIDENCE_BASE_WITHOUT_PROVENANCE = 0.4
 const CONFIDENCE_EVIDENCE_BOOST = 0.2
@@ -73,6 +82,7 @@ const locationKey = (finding: AnalysisFinding): string => {
 		return finding.id
 	}
 
+	// kilocode_change start
 	// Next, try to derive a key from the location information.
 	const location = finding.location
 	const locationKeyParts = [location?.file, location?.line, location?.functionName].filter(Boolean)
@@ -90,6 +100,12 @@ const locationKey = (finding: AnalysisFinding): string => {
 	// As a final fallback, derive a deterministic key from other fields that should
 	// always be present, ensuring we never return an empty string.
 	return ["finding", finding.severity, finding.contradicted ? "contradicted" : "normal"].join("|")
+	return [
+		"finding",
+		finding.severity,
+		finding.contradicted ? "contradicted" : "normal",
+	].join("|")
+	// kilocode_change end
 }
 // kilocode_change end
 

@@ -16,6 +16,8 @@ export type Severity = "low" | "medium" | "high" | "critical"
  * }
  * ```
  */
+export type EvidenceData = string | Record<string, unknown> // kilocode_change
+
 export interface Evidence {
 	/** Unique identifier for this evidence item */
 	id: string
@@ -25,6 +27,7 @@ export interface Evidence {
 	description: string
 	/** Supporting data - can be structured (JSON object) or unstructured (string) depending on evidence type */
 	data: string | Record<string, unknown>
+	data: EvidenceData // kilocode_change
 }
 
 /**
