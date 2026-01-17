@@ -10,15 +10,39 @@ const combine = <T>(items: T[], extras: T[]): T[] => {
 	return [...items, ...extras]
 }
 
+// kilocode_change start
+// Confidence scoring model:
+// - Start from a base confidence that is higher when we have at least one provenance entry.
+// - Add a fixed boost when we have any supporting evidence.
+// - Add a small boost for each additional provenance entry, up to a capped maximum.
+// - Subtract a penalty if the finding has been contradicted.
+// - Finally clamp the score into the [0, 1] range.
+const CONFIDENCE_BASE_WITH_PROVENANCE = 0.6
+const CONFIDENCE_BASE_WITHOUT_PROVENANCE = 0.4
+const CONFIDENCE_EVIDENCE_BOOST = 0.2
+const CONFIDENCE_PROVENANCE_PER_ADDITIONAL = 0.1
+const CONFIDENCE_PROVENANCE_MAX_BOOST = 0.2
+const CONFIDENCE_CONTRADICTION_PENALTY = 0.3
+
 const calculateConfidence = (finding: AnalysisFinding): number => {
-	const base = finding.provenance.length > 0 ? 0.6 : 0.4
-	const evidenceBoost = finding.evidence.length > 0 ? 0.2 : 0
-	const provenanceBoost = Math.min(0.2, (finding.provenance.length - 1) * 0.1)
-	const contradictionPenalty = finding.contradicted ? 0.3 : 0
+	const hasProvenance = finding.provenance.length > 0
+	const base = hasProvenance ? CONFIDENCE_BASE_WITH_PROVENANCE : CONFIDENCE_BASE_WITHOUT_PROVENANCE
+
+	const hasEvidence = finding.evidence.length > 0
+	const evidenceBoost = hasEvidence ? CONFIDENCE_EVIDENCE_BOOST : 0
+
+	const additionalProvenanceCount = Math.max(0, finding.provenance.length - 1)
+	const provenanceBoost = Math.min(
+		CONFIDENCE_PROVENANCE_MAX_BOOST,
+		additionalProvenanceCount * CONFIDENCE_PROVENANCE_PER_ADDITIONAL,
+	)
+
+	const contradictionPenalty = finding.contradicted ? CONFIDENCE_CONTRADICTION_PENALTY : 0
 	const raw = base + evidenceBoost + provenanceBoost - contradictionPenalty
 
 	return Math.max(0, Math.min(1, raw))
 }
+// kilocode_change end
 
 const locationKey = (finding: AnalysisFinding): string => {
 	// Prefer a stable, explicit identifier if present.
