@@ -25,3 +25,8 @@ export * from "./theme/index.js"
 
 // Agent manager schemas
 export * from "./agent-manager/index.js"
+
+// kilocode_change start
+// Web3 Security schemas
+export * from "./web3-security/index.js"
+// kilocode_change end

@@ -1,0 +1,18 @@
+# kilocode_change - new file
+# G-CTR Subagent Configuration for Kilo
+# This subagent generates strategic attack digests from tool execution logs
+
+subagents:
+  - name: gctr-digest
+    description: Generate strategic digest from tool logs using attack graphs
+    type: python
+    runtime: python3.10
+    path: ./subagents/gctr_agent.py
+    entrypoint: generate_digest
+    inputs:
+      - name: logs
+        type: file
+        path: ./logs/last_run.json
+    outputs:
+      - name: digest
+        type: string

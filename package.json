@@ -38,7 +38,9 @@
 		"cli:dev": "pnpm --filter @kilocode/cli run dev",
 		"cli:run": "pnpm --filter @kilocode/cli run start",
 		"docs:start": "pnpm --filter kilocode-docs start",
-		"docs:build": "pnpm --filter kilocode-docs build"
+		"docs:build": "pnpm --filter kilocode-docs build",
+		"sync:fork": "bash scripts/sync-upstream.sh",
+		"sync:fork:rebase": "bash scripts/sync-upstream.sh --rebase"
 	},
 	"devDependencies": {
 		"@changesets/changelog-github": "^0.5.1",
@@ -61,7 +63,8 @@
 		"rimraf": "^6.0.1",
 		"tsx": "^4.19.3",
 		"turbo": "^2.6.0",
-		"typescript": "^5.4.5"
+		"typescript": "^5.4.5",
+		"vitest": "^4.0.17"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json,css,md}": [

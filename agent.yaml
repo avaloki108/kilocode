@@ -1,0 +1,42 @@
+# kilocode_change - new file
+# Main Agent Configuration for GLM-4.7 Security Brain
+# Integrates the G-CTR subagent for strategic attack planning
+
+agents:
+  - name: glm-sec-brain
+    description: Security-focused agent for web3 threat analysis
+    model: glm-4.7
+    loop: true
+    max_iterations: 10
+    
+    steps:
+      - name: recon
+        description: Execute reconnaissance tools and gather initial findings
+        tool: run_web_recon
+        output: ./logs/last_run.json
+      
+      - name: analyze
+        description: Generate strategic digest using G-CTR attack graph analysis
+        subagent: gctr-digest
+        output: digest
+      
+      - name: plan
+        description: Select next best action based on strategic digest
+        prompt: |
+          You are a security analyst using game-theoretic strategies.
+          
+          Use the following strategic digest to select the next best action:
+          {{ digest }}
+          
+          Consider:
+          - Effort-to-impact ratio of each path
+          - Probability of success
+          - Potential defensive countermeasures
+          - Resource constraints
+          
+          Respond with your chosen action and reasoning.
+        
+      - name: execute
+        description: Execute the planned action
+        tool: dynamic
+        condition: "{{ plan.action_type != 'stop' }}"
