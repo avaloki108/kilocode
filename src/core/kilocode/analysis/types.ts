@@ -1,10 +1,12 @@
 export type Severity = "low" | "medium" | "high" | "critical"
 
+export type EvidenceData = string | Record<string, unknown> // kilocode_change
+
 export interface Evidence {
 	id: string
 	type: string
 	description: string
-	data: string
+	data: EvidenceData // kilocode_change
 }
 
 export interface Provenance {
