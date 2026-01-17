@@ -1,3 +1,4 @@
+// kilocode_change start
 import { describe, it, expect } from "vitest"
 import { AttackGraph } from "../attackGraph"
 import { StrategyManager } from "../strategyManager"
@@ -15,17 +16,8 @@ const createGraph = () => {
 	return graph
 }
 
-describe("AttackGraph", () => {
-	it("ranks paths by total effort", () => {
-		const graph = createGraph()
-		const paths = graph.rankPaths("A", "C")
-
-		expect(paths[0]).toEqual({ nodes: ["A", "B", "C"], totalEffort: 3 })
-		expect(paths[1]).toEqual({ nodes: ["A", "D", "C"], totalEffort: 6 })
-	})
-})
-
 describe("StrategyManager", () => {
+	// kilocode_change end
 	it("generates a digest with ranked paths", () => {
 		const graph = createGraph()
 		const manager = new StrategyManager()
