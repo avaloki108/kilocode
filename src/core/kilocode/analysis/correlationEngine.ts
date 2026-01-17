@@ -21,12 +21,34 @@ const calculateConfidence = (finding: AnalysisFinding): number => {
 }
 
 const locationKey = (finding: AnalysisFinding): string => {
+	// Prefer a stable, explicit identifier if present.
 	if (finding.id) {
 		return finding.id
 	}
 
+	// kilocode_change start
+	// Next, try to derive a key from the location information.
 	const location = finding.location
-	return [location?.file, location?.line, location?.functionName].filter(Boolean).join(":")
+	const locationKeyParts = [location?.file, location?.line, location?.functionName].filter(Boolean)
+	if (locationKeyParts.length > 0) {
+		return locationKeyParts.join(":")
+	}
+
+	// If there is no id and no location, fall back to a key based on title/description
+	// so that unrelated findings are not merged solely because they lack location data.
+	const textKeyParts = [finding.title, finding.description].filter(Boolean)
+	if (textKeyParts.length > 0) {
+		return textKeyParts.join("|")
+	}
+
+	// As a final fallback, derive a deterministic key from other fields that should
+	// always be present, ensuring we never return an empty string.
+	return [
+		"finding",
+		finding.severity,
+		finding.contradicted ? "contradicted" : "normal",
+	].join("|")
+	// kilocode_change end
 }
 
 export class CorrelationEngine {
